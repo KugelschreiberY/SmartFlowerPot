@@ -4,7 +4,7 @@ This repository offers instructions to build a smart flower pot. The final proto
 
 Following these instructions allows you to build your own self-watering flower pot, which can look like this:
 
-![Flower Pot Example](/images/FlowerPotExample.jpg)
+![Flower Pot Example](/images/FlowerPotExample.jpg | width=100)
 
 
 ## Hardware
