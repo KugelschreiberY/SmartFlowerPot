@@ -1,0 +1,3 @@
+[submodule "epiccontrol"]
+	path = epiccontrol
+	url = https://github.com/KugelschreiberY/epiccontrol.git
