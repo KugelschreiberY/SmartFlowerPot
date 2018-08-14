@@ -24,6 +24,12 @@ In this section we give a guideline how to build the flowerpot and set up the so
 
 TODO
 
+Below you can find how the circuit can look like.
+
+![Flower Pot Example](/images/circuit/circuitIncludingParts.jpg)
+
+I am not really happy using two batteries, but since the power supply from the microcontroller doesn't suffice the water pump this is one possible solution.
+
 ### Instructions for setting up the micro controller
 
 TODO
