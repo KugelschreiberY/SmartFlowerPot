@@ -21,7 +21,7 @@ Following these instructions allows you to build your own self-watering flower p
 
 ## Instructions
 
-In this section we give a guideline how to build the flowerpot and set up the software. You don't have to stick to all steps necessarily, there are a lot of different implementations, especially concerning the circuit when you use another type of micro controller. 
+In this section we give a guideline how to build the flowerpot and set up the software. You don't have to stick to all steps necessarily. There are a lot of different implementations, especially concerning the circuit when using another type of micro controller. 
 
 ### Instructions for building the flower pot
 
@@ -43,11 +43,17 @@ TODO: offer picture of water pump circuit
 
 ### Instructions for setting up the micro controller
 
+First you need to enter the wifi network you are using into the first lines of the sketch
+```c
+char ssid[] = "your-ssid";      // your network SSID (name)
+char pass[] = "your-password";  // your network password (use for WPA, or use as key for WEP)
+```
+
 To upload the sketch, simply start the Arduino IDE and connect your micro controller.
 
 ### Instructions for setting up the web application
 
-In this section we explain how to set up the web interface to monitor the plant. Here we use a fork of anythingcontroller and epiccontrol by Menno van der Zee.
+Now we set up the web interface to monitor the plant, we use the anythingcontroller and epiccontrol by Menno van der Zee. (Todo add reference)
 
 ![Web Userinterface Example](/images/MonitoringSystem.png)
 
@@ -55,8 +61,6 @@ The server requires python and node.js, please note that it only runs on unix ba
 
 #### Using the flower pot without the monitoring system
 
-You can also build the flower pot and use it without the monitoring system mentioned above e.g. if you are using a micro controller without a wifi module. To do so, please comment out the wifi initialization and http-requests in the respective sketch that should be uploaded to your micro controller. 
+You can also build the flower pot and use it without the monitoring system mentioned previously e.g. if you are using a micro controller without a wifi module. To do so, please comment out the wifi initialization and http-requests in the respective sketch that should be uploaded to your micro controller. 
 
-(TODO offer a file without those connections).
-
-If you have any questions or suggestions for optimisation feel free to open an issue:
+If you have any questions or suggestions for optimisation feel free to open an issue or contact me via email.

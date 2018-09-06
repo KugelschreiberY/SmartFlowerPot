@@ -3,15 +3,18 @@
 #include <ArduinoJson.h>
 
 
-const int airPump = 10;
-const int hygrometer = A1;
-const int waterlevel = A2;
+const int airPump = 10;     //pin of the water pump
+const int hygrometer = A1;  //pin of the hygrometer measuring soil humidity
+const int waterlevel = A2;  //pin of water sensor measuring water level
 
-const int has_Serial = 0;
+const int wateringInterval = 1500   //watering interval in miliseconds
+const int lowSoilHumdity = 20       //below that point of soil humdity, the pot automatically waters itself
 
-char ssid[] = "Simons iPhone";      // your network SSID (name)
-char pass[] = "flowerpot";     // your network password (use for WPA, or use as key for WEP)   // your network password (use for WPA, or use as key for WEP)
-int keyIndex = 0;            // your network key Index number (needed only for WEP)
+const int has_Serial = 0;   //0 = Serial connection disabled, 1 = Serial connection enabled
+
+char ssid[] = "your-ssid";      // your network SSID (name)
+char pass[] = "your-password";  // your network password (use for WPA, or use as key for WEP)
+int keyIndex = 0;               // your network key Index number (needed only for WEP)
 
 int status = WL_IDLE_STATUS;
 
@@ -19,16 +22,16 @@ int status = WL_IDLE_STATUS;
 WiFiClient client;
 
 // server address:
-char server[] = "172.20.10.5";//"192.168.178.20";
-//char server[] = "localhost"
+char server[] = "localhost";
 
 unsigned long lastConnectionTime = 0;            // last time you connected to the server, in milliseconds
 const unsigned long postingInterval = 2L * 1000L; // delay between updates, in milliseconds
 
 void setup() {
   //Initialize serial and wait for port to open:
-  WiFi.setPins(8, 7, 4, 2);
+  WiFi.setPins(8, 7, 4, 2); //setting wifi pins, necessary for Adafruit
 
+  //start serial connection if enabled
   if(has_Serial == 1){
     Serial.begin(9600);
     while (!Serial) {
@@ -54,64 +57,59 @@ void setup() {
     // Connect to WPA/WPA2 network. Change this line if using open or WEP network:
     status = WiFi.begin(ssid, pass);
 
-    // wait 10 seconds for connection:
+    // wait 6 seconds for connection:
     delay(6000);
   }
-  // you're connected now, so print out the status:
   printWiFiStatus();
 
+  //setting pin modes
   pinMode(hygrometer, INPUT_PULLUP);
   pinMode(waterlevel, INPUT_PULLUP);
-
   pinMode(airPump,OUTPUT);
 }
 
 
-
-
-
 void loop() {
-  
-  // if there's incoming data from the net connection.
-  // send it out the serial port.  This is for debugging
-  // purposes only:
+  //receive full message
   char fullmessage [126];
   const char *openbracket = "[";
   const char *closebracket = "]";
   //char message;
   bool startcopy = false;
   int index = 0;
+
+  //read message (this can be done better surely!)
   while (client.available()) {
     char message = client.read();
-    
+
     if (strchr(closebracket, message))
     {
       startcopy = false;
-      fullmessage[index] = '\0'; 
+      fullmessage[index] = '\0';
     }
     if (startcopy == true) {
-      if(index < 124) 
+      if(index < 124)
       {
-        fullmessage[index] = message; // Store it
-        index++; 
+        fullmessage[index] = message; // Store char
+        index++;
       }
     }
     if (strchr(openbracket, message))
     {
       startcopy = true;
     }
-    
-    //Serial.write(message);
   }
-  
-  
+
 
   if (millis() - lastConnectionTime > postingInterval) {
+    //get hygrometer value
     int soilhumidity = analogRead(hygrometer);
     httpRequestSet(soilhumidity,"SoilHumidity");
-    //Serial.println(fullmessage);
+    //get waterlevel value
     int waterlevel_value = analogRead(waterlevel);
     httpRequestSet(waterlevel_value,"Waterlevel");
+
+    //print out values if serial is enabled
     if(has_Serial == 1){
       Serial.print("Soil Humidity: ");
       Serial.println(soilhumidity);
@@ -119,44 +117,49 @@ void loop() {
       Serial.println(waterlevel_value);
     }
 
+    //decode string to json
     StaticJsonBuffer<200> jsonBuffer;
-    //const char* pin;
-    //double epochtime;
-    int value = 0;
     JsonObject& root = jsonBuffer.parseObject(fullmessage);
 
-    value = root["value"];
+    //get waterpump value: 0 = waterpump off, 1 = waterpump on
+    int isWaterPumpOn = root["value"];
 
-    if (value == 0.0) {
+    // if water pump should be turned off
+    if (isWaterPumpOn == 0.0) {
+      //turn water pump off
       digitalWrite(airPump,LOW);
-      if(soilhumidity<20){
+      //if soil humidity is low enough, the system automatically turns on pump
+      if(soilhumidity<lowSoilHumdity){
         httpRequestSet(1,"WaterPump");
         digitalWrite(airPump,HIGH);
-        delay(1500);
+        //let pump run for 1.5 sec
+        delay(wateringInterval);
         digitalWrite(airPump, LOW);
         delay(400);
         httpRequestSet(0,"WaterPump");
       }
     }
-    if (value == 1.0) {
+    // if water pump should be turned on
+    if (isWaterPumpOn == 1.0) {
+      //let pump run for 1.5 sec
       digitalWrite(airPump,HIGH);
-      delay(1500);
+      delay(wateringInterval);
       digitalWrite(airPump, LOW);
     }
-    
+
     if(has_Serial == 1){
       Serial.print("WaterPump: ");
       Serial.println(value);
-      Serial.println(FreeRam());
     }
-    httpRequestGet();
-    
+    //requests for new water pump value
+    httpRequestGet("WaterPump");
+
   }
-  
+
 }
 
-// this method makes a HTTP connection to the server:
-void httpRequestGet() {
+// HTTP connection to the server:
+void httpRequestGet(String component) {
   // close any connection before send a new request.
   // This will free the socket on the WiFi shield
   client.stop();
@@ -166,9 +169,9 @@ void httpRequestGet() {
     if(has_Serial == 1){
       Serial.println("connecting...");
     }
-    
-    // send the HTTP PUT request:
-    client.println("GET /WaterPump");
+
+    // send the HTTP PUT request for component
+    client.println("GET /"+component);
     client.println("Connection: close");
     client.println();
 
@@ -183,7 +186,7 @@ void httpRequestGet() {
   }
 }
 
-// this method makes a HTTP connection to the server:
+//HTTP connection to the server:
 void httpRequestSet(int value, String component) {
   // close any connection before send a new request.
   // This will free the socket on the WiFi shield
@@ -191,12 +194,13 @@ void httpRequestSet(int value, String component) {
 
   // if there's a successful connection:
   if (client.connect(server, 4000)) {
+    //print on serial if enabled
     if(has_Serial == 1){
       Serial.println("connecting...");
       // send the HTTP PUT request:
-      Serial.println("GET /set/"+component+"?state="+String(value)); 
+      Serial.println("GET /set/"+component+"?state="+String(value));
     }
-    
+
     client.println("GET /set/"+component+"?state="+String(value));
     client.println("Connection: close");
     client.println();
@@ -209,33 +213,27 @@ void httpRequestSet(int value, String component) {
     if(has_Serial == 1){
       Serial.println("connection failed");
     }
-    
+
   }
 }
 
 extern "C" char *sbrk(int i);
 
-int FreeRam () {
-  char stack_dummy = 0;
-  return &stack_dummy - sbrk(0);
-}
 
+// print the SSID of the network you're attached to:
 void printWiFiStatus() {
-  // print the SSID of the network you're attached to:
+  //print if serial is enabled
   if(has_Serial == 1){
     Serial.print("SSID: ");
     Serial.println(WiFi.SSID());
-  }
 
-  // print your WiFi shield's IP address:
-  IPAddress ip = WiFi.localIP();
-  if(has_Serial == 1){
+    // print your WiFi shield's IP address:
+    IPAddress ip = WiFi.localIP();
     Serial.print("IP Address: ");
     Serial.println(ip);
-  }
-  // print the received signal strength:
-  if(has_Serial == 1){
-  long rssi = WiFi.RSSI();
+
+    // print the received signal strength:
+    long rssi = WiFi.RSSI();
     Serial.print("signal strength (RSSI):");
     Serial.print(rssi);
     Serial.println(" dBm");
