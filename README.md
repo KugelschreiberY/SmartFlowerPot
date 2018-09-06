@@ -53,11 +53,32 @@ To upload the sketch, simply start the Arduino IDE and connect your micro contro
 
 ### Instructions for setting up the web application
 
-Now we set up the web interface to monitor the plant, we use the anythingcontroller and epiccontrol by Menno van der Zee. (Todo add reference)
+Now we set up the web interface to monitor the plant, we use the anythingcontroller and epiccontrol by Menno van der Zee.
 
 ![Web Userinterface Example](/images/MonitoringSystem.png)
 
 The server requires python and node.js, please note that it only runs on unix based operation systems i.e. MacOS or Linux. The testing and most of the development was performed on MacOS.
+
+TODO steps to install anythingcontroller and epiccontrol
+
+#### anythingcontroller
+Install and set up dependencies using
+```
+cd epiccontrol/anythincontroller
+./install.sh
+```
+
+#### epiccontrol
+Install and set up dependencies using
+```
+cd epiccontrol
+./install.sh
+```
+To run the server, call 
+```
+node server.js
+```
+By default this runs the server on the devices ip address on port 4000
 
 #### Using the flower pot without the monitoring system
 
