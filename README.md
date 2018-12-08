@@ -13,11 +13,10 @@ Following these instructions allows you to build your own self-watering flower p
 - soil moisture sensor
 - water level sensor
 - battery pack (1x 3.3V for Feather and 1x 6-9V for the water pump)
-- plastic pipe 
-
 - transistor (NPN BC547)
 - base resistor 220 Ohm
 - jumper wires
+- plastic pipe and some kind of water tank (I used a milk carton)
 
 ## Instructions
 
@@ -35,11 +34,9 @@ Mapping to the pins of the sensors and actuators is as follows:
 - 10: collector of transistor
 
 Although I am not happy using two batteries, this is one solution to the problem that the power supply of the micro controller (3.3V) does not suffice for the water pump.
-Please note as well that instead of the Adafruit Feather you can use any other micro controller. An Arduino Uno for example has the advantage of now requiring another power source (but the lack of no wifi: see section "Using the flower pot without the monitoring system").  
+Please note as well that instead of the Adafruit Feather you can use any other micro controller. An Arduino Uno for example has the advantage of not requiring another power source (but it has no wifi: see section "Using the flower pot without the monitoring system").  
 
-To offer a nicely distributed water supply for your plant, you can create a plastic pipe circuit, which is connected to the water pump.
-
-TODO: offer picture of water pump circuit
+To offer a nicely distributed water supply for your plant, cut some holes in the plastic pipe and connect it to the water pump.
 
 ### Instructions for setting up the micro controller
 
@@ -58,8 +55,6 @@ Now we set up the web interface to monitor the plant, we use the anythingcontrol
 ![Web Userinterface Example](/images/MonitoringSystem.png)
 
 The server requires python and node.js, please note that it only runs on unix based operation systems i.e. MacOS or Linux. The testing and most of the development was performed on MacOS.
-
-TODO steps to install anythingcontroller and epiccontrol
 
 #### anythingcontroller
 Install and set up dependencies using
